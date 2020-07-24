@@ -1,8 +1,10 @@
 {
-  "include": ["$(MODDABLE)/examples/manifest_base.json"],
-  "modules": { 
-		"*": [
-      "./main"
-    ]
+  "include": ["$(MODDABLE)/examples/manifest_base.json", "$(MODDABLE)/examples/manifest_piu.json"],
+  "modules": {
+    "*": ["./*"]
+  },
+  "preload": ["lifegame"],
+  "creation": {
+    "static": 131072
   }
 }
