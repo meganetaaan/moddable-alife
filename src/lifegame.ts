@@ -1,110 +1,110 @@
-// declare function trace(str: string): void
-class Matrix {
-  #count = 0
-  #array: Uint8Array
-  #height: number
-  #width: number
-  constructor({ height, width }: { height: number; width: number }) {
-    this.#height = height
-    this.#width = width
-    this.#array = new Uint8Array(this.#height * this.#width)
-    // this.#array = []
-    this.init()
-  }
-  init(): void {
-    // const arr: number[] = [0]
-    for (let i = 0; i < this.#height * this.#width; i++) {
-      this.#array[i] = Math.round(Math.random())
-      // arr[0] = Math.round(Math.random())
-      // this.#array.set(arr, i)
-    }
-  }
-  get(top: number, left: number): number {
-    top = top % this.#height
-    left = left % this.#width
-    const idx = this.#width * top + left
-    return this.#array[idx]
-    // return this.#array.slice(idx, 1)[0]
-  }
-  set(top: number, left: number, value: number): void {
-    top = top % this.#height
-    left = left % this.#width
-    this.#array[this.#width * top + left] = value
-    // this.#array.set([value], this.#width * top + left)
-  }
-  toString(): string {
-    let str = ''
-    for (let i = 0; i < this.#height; i++) {
-      const start = i * this.#height
-      str += this.#array.slice(start, start + this.#width).join('') + '\n'
-    }
-    return str
-  }
-}
-Object.freeze(Matrix)
+type Cell = number
+type Cells = Set<Cell>
 
-export class LifeGame {
-  static DEFAULT_HEIGHT = 64
-  static DEFAULT_WIDTH = 64
-  #height: number
+declare function trace(message: string): void
+
+function top(cell: Cell): number {
+  return cell >> 8
+}
+function left(cell: Cell): number {
+  return cell & 0xff
+}
+function cell(top: number, left: number) {
+  return (top << 8) | left
+}
+
+function countNeighbors(c: Cell, cs: Cells, h: number, w: number): number {
+  const t = top(c)
+  const st = t === 0 ? h - 1 : t - 1
+  const gt = t === h - 1 ? 0 : t + 1
+  const l = left(c)
+  const sl = l === 0 ? w - 1 : l - 1
+  const gl = l === w - 1 ? 0 : l + 1
+  const count =
+    Number(cs.has(cell(st, sl))) +
+    Number(cs.has(cell(t, sl))) +
+    Number(cs.has(cell(gt, sl))) +
+    Number(cs.has(cell(st, l))) +
+    Number(cs.has(cell(gt, l))) +
+    Number(cs.has(cell(st, gl))) +
+    Number(cs.has(cell(t, gl))) +
+    Number(cs.has(cell(gt, gl)))
+  return count
+}
+
+function survive(c: Cell, cs: Cells, h: number, w: number): boolean {
+  const nadj = countNeighbors(c, cs, h, w)
+  return nadj === 3 || (cs.has(c) && nadj === 2)
+}
+
+function addNeighbors(c: Cell, cs: Cells, h: number, w: number): void {
+  const t = top(c)
+  const st = t === 0 ? h - 1 : t - 1
+  const gt = t === h - 1 ? 0 : t + 1
+  const l = left(c)
+  const sl = l === 0 ? w - 1 : l - 1
+  const gl = l === w - 1 ? 0 : l + 1
+  cell(st, sl)
+  cell(t, sl)
+  cell(gt, sl)
+  cell(st, l)
+  cell(gt, l)
+  cell(st, gl)
+  cell(t, gl)
+  cell(gt, gl)
+  cs.add(cell(st, sl))
+  cs.add(cell(t, sl))
+  cs.add(cell(gt, sl))
+  cs.add(cell(st, l))
+  cs.add(cell(gt, l))
+  cs.add(cell(st, gl))
+  cs.add(cell(t, gl))
+  cs.add(cell(gt, gl))
+}
+
+class LifeGame {
+  #cells: Cells = new Set()
   #width: number
-  #state: Matrix
-  #nextState: Matrix
-  onTick?: (lg: LifeGame) => void = () => {}
-  onInit?: (lg: LifeGame) => void = () => {}
-  constructor(param?: { height?: number; width?: number }) {
-    this.#height = param?.height ?? LifeGame.DEFAULT_HEIGHT
-    this.#width = param?.width ?? LifeGame.DEFAULT_WIDTH
-    this.#state = new Matrix({ height: this.#height, width: this.#width })
-    this.#nextState = new Matrix({ height: this.#height, width: this.#width })
-  }
-  get height(): number {
-    return this.#height
+  #height: number
+  static top = top
+  static left = left
+  constructor({ height, width }: { height: number; width: number }) {
+    this.#width = width
+    this.#height = height
   }
   get width(): number {
     return this.#width
   }
-  getCell(top: number, left: number): number {
-    return this.#state.get(top, left)
+  get height(): number {
+    return this.height
   }
-  setCell(top: number, left: number, value: number): void {
-    this.#state.set(top, left, value)
+  get cells(): Cells {
+    return this.#cells
   }
   init(): void {
-    this.#state.init()
-    if (typeof this.onInit === 'function') {
-      this.onInit(this)
-    }
-  }
-  tick(): void {
-    const state = this.#state
-    const nextState = this.#nextState
+    const cs = new Set<Cell>()
     for (let i = 0; i < this.#height; i++) {
       for (let j = 0; j < this.#width; j++) {
-        const nw = state.get(i - 1, j - 1)
-        const n = state.get(i - 1, j)
-        const ne = state.get(i - 1, j + 1)
-        const w = state.get(i, j - 1)
-        const c = state.get(i, j)
-        const e = state.get(i, j + 1)
-        const sw = state.get(i + 1, j - 1)
-        const s = state.get(i + 1, j)
-        const se = state.get(i + 1, j + 1)
-        const neighborSum = nw + n + ne + w + e + sw + s + se
-        if (c === 0 && neighborSum === 3) {
-          nextState.set(i, j, 1)
-        } else if (c === 1 && [2, 3].includes(neighborSum)) {
-          nextState.set(i, j, 1)
-        } else {
-          nextState.set(i, j, 0)
+        if (Math.random() > 0.7) {
+          cs.add(cell(i, j))
         }
       }
     }
-    this.#state = nextState
-    this.#nextState = state
-    if (typeof this.onTick === 'function') {
-      this.onTick(this)
-    }
+    this.#cells = cs
+  }
+  tick(): void {
+    const current = this.#cells
+    const next = new Set<Cell>()
+    current.forEach((c) => {
+      addNeighbors(c, next, this.#height, this.#width)
+    })
+    next.forEach((c) => {
+      if (!survive(c, current, this.#height, this.#width)) {
+        next.delete(c)
+      }
+    })
+    this.#cells = next
   }
 }
-Object.freeze(LifeGame)
+
+export { LifeGame }
