@@ -5,11 +5,12 @@ import Timer from 'timer'
 import type { Monitor } from 'pins/digital'
 
 declare function trace(message: number | string): void
-declare const global: any
-declare const button: {
-  a: Monitor
-  b: Monitor
-  c: Monitor
+declare const global: {
+  button?: {
+    a: Monitor
+    b: Monitor
+    c: Monitor
+  }
 }
 const EVENT_ONGAMEINIT = 'onGameInit'
 
@@ -62,7 +63,7 @@ const application = new Application(null, {
 })
 
 if (global.button != null) {
-  button.a.onChanged = function () {
+  global.button.a.onChanged = function () {
     if (this.read()) {
       lifeGamePort.delegate(EVENT_ONGAMEINIT)
     }
