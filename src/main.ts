@@ -1,5 +1,5 @@
 /* eslint-disable no-debugger */
-import { LifeGame } from 'src/lifegame'
+import { LifeGame } from 'lifegame'
 import { Application, Port, Behavior, Skin } from 'piu/MC'
 import Timer from 'timer'
 import type { Monitor } from 'pins/digital'
