@@ -1,8 +1,8 @@
 /* eslint-disable no-debugger */
-import { LifeGame } from 'lifegame'
+import LifeGame from 'lifegame2'
 import { Application, Port, Behavior, Skin } from 'piu/MC'
 import Timer from 'timer'
-import type { Monitor } from 'pins/digital'
+import type Monitor from 'pins/digital/monitor'
 
 declare function trace(message: number | string): void
 declare const global: {
@@ -18,13 +18,13 @@ class LifeGameBehavior extends Behavior {
   lifeGame?: LifeGame
   onCreate(port: Port) {
     this.lifeGame = new LifeGame({
-      width: 32,
-      height: 24,
+      width: 64,
+      height: 48,
     })
     Timer.repeat(() => {
       this.lifeGame?.tick()
       port.invalidate()
-    }, 125)
+    }, 1000)
     this.onGameInit()
   }
   onGameInit() {
@@ -32,10 +32,12 @@ class LifeGameBehavior extends Behavior {
   }
   onDraw(port: Port): void {
     port.fillColor('black', 0, 0, 320, 240)
-    this.lifeGame?.cells.forEach((c) => {
-      const top = LifeGame.top(c)
-      const left = LifeGame.left(c)
-      port.fillColor('white', left * 10, top * 10, 8, 8)
+    const lg = this.lifeGame as LifeGame
+    const width = lg.width
+    lg.cells.forEach((c: number) => {
+      const top = Math.floor(c / width)
+      const left = c % width
+      port.fillColor('white', left * 5, top * 5, 4, 4)
     })
   }
 }
@@ -58,8 +60,8 @@ const application = new Application(null, {
     fill: 'black',
   }),
   contents: [lifeGamePort],
-  displayListLength: 4096,
-  commandListLength: 4096,
+  displayListLength: 4096 * 4,
+  commandListLength: 4096 * 4,
 })
 
 if (global.button != null) {
