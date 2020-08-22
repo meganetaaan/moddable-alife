@@ -44,14 +44,6 @@ function addNeighbors(c: Cell, cs: Cells, h: number, w: number): void {
   const l = left(c)
   const sl = l === 0 ? w - 1 : l - 1
   const gl = l === w - 1 ? 0 : l + 1
-  cell(st, sl)
-  cell(t, sl)
-  cell(gt, sl)
-  cell(st, l)
-  cell(gt, l)
-  cell(st, gl)
-  cell(t, gl)
-  cell(gt, gl)
   cs.add(cell(st, sl))
   cs.add(cell(t, sl))
   cs.add(cell(gt, sl))
